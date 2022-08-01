@@ -1,7 +1,8 @@
-﻿using Microsoft.Extensions.DependencyInjection;
+﻿using System.Diagnostics.Metrics;
+using Microsoft.Extensions.DependencyInjection;
 using WorkflowCore.Interface;
 using WorkflowCore.Models;
-using WorkflowCore.Primitives;
+using WorkflowCoreTutorial.Middlewares;
 using WorkflowCoreTutorial.Services;
 using WorkflowCoreTutorial.States;
 using WorkflowCoreTutorial.Steps;
@@ -12,6 +13,11 @@ services.AddLogging();
 services.AddWorkflow();
 services.AddTransient<TimestampService>();
 services.AddTransient<DumpTimeStampStep>();
+services.AddWorkflowStepMiddleware<ErrorHandlingMiddleWare>();
+services.AddWorkflowStepMiddleware<LoggingStepMiddleware>();
+services.AddWorkflowMiddleware<PreWorkflowMiddleware>();
+services.AddWorkflowMiddleware<PostWorkflowMiddleware>();
+services.AddWorkflowMiddleware<ExecuteWorkflowMiddleware>();
 
 var serviceProvider = services.BuildServiceProvider();
 var host = serviceProvider.GetService<IWorkflowHost>()!;
@@ -27,6 +33,10 @@ host.RegisterWorkflow<ForEachParallelWorkflow, ForEachState>();
 host.RegisterWorkflow<ParallelWorkflow, object>();
 host.RegisterWorkflow<ScheduleWorkflow, object>();
 host.RegisterWorkflow<RecurWorkflow, CounterState>();
+host.RegisterWorkflow<ErrorHandlingWorkflow, object>();
+host.RegisterWorkflow<SagaWorkflow, object>();
+host.RegisterWorkflow<ExternalEventWorkflow, object>();
+host.RegisterWorkflow<ExternalActivityWorkflow, CounterState>();
 
 host.Start(); 
 
@@ -44,51 +54,88 @@ workflowInstanceId = await host.StartWorkflow(nameof(CounterWorkflow), new Count
 Console.WriteLine($"{workflowInstanceId} workflow started");
 
 await WaitForWorkflowInstanceToEnd(host, workflowInstanceId);
-
-workflowInstanceId = await host.StartWorkflow(nameof(TimeStampWorkflow));
+//
+// workflowInstanceId = await host.StartWorkflow(nameof(TimeStampWorkflow));
+// Console.WriteLine($"{workflowInstanceId} workflow started");
+//
+// await WaitForWorkflowInstanceToEnd(host, workflowInstanceId);
+//
+// workflowInstanceId = await host.StartWorkflow(nameof(BranchingWorkflow), new BranchingState { Branch = "B"});
+// Console.WriteLine($"{workflowInstanceId} workflow started");
+//
+// await WaitForWorkflowInstanceToEnd(host, workflowInstanceId);
+//
+// workflowInstanceId = await host.StartWorkflow(nameof(IfWorkflow), new IfState { EnterIf = true});
+// Console.WriteLine($"{workflowInstanceId} workflow started");
+//
+// await WaitForWorkflowInstanceToEnd(host, workflowInstanceId);
+//
+// workflowInstanceId = await host.StartWorkflow(nameof(IfWorkflow), new IfState { EnterIf = false});
+// Console.WriteLine($"{workflowInstanceId} workflow started");
+//
+// await WaitForWorkflowInstanceToEnd(host, workflowInstanceId);
+//
+// workflowInstanceId = await host.StartWorkflow(nameof(WhileWorkflow), new CounterState { CurrentCount = 1});
+// Console.WriteLine($"{workflowInstanceId} workflow started");
+//
+// await WaitForWorkflowInstanceToEnd(host, workflowInstanceId);
+//
+// workflowInstanceId = await host.StartWorkflow(nameof(ForEachParallelWorkflow), new ForEachState());
+// Console.WriteLine($"{workflowInstanceId} workflow started");
+//
+// await WaitForWorkflowInstanceToEnd(host, workflowInstanceId);
+//
+// workflowInstanceId = await host.StartWorkflow(nameof(ParallelWorkflow));
+// Console.WriteLine($"{workflowInstanceId} workflow started");
+//
+// await WaitForWorkflowInstanceToEnd(host, workflowInstanceId);
+//
+// workflowInstanceId = await host.StartWorkflow(nameof(ScheduleWorkflow));
+// Console.WriteLine($"{workflowInstanceId} workflow started");
+//
+// await WaitForWorkflowInstanceToEnd(host, workflowInstanceId);
+//
+// workflowInstanceId = await host.StartWorkflow(nameof(RecurWorkflow), new CounterState { CurrentCount = 1});
+// Console.WriteLine($"{workflowInstanceId} workflow started");
+//
+// await WaitForWorkflowInstanceToEnd(host, workflowInstanceId);
+//
+workflowInstanceId = await host.StartWorkflow(nameof(ErrorHandlingWorkflow));
 Console.WriteLine($"{workflowInstanceId} workflow started");
 
 await WaitForWorkflowInstanceToEnd(host, workflowInstanceId);
-
-workflowInstanceId = await host.StartWorkflow(nameof(BranchingWorkflow), new BranchingState { Branch = "B"});
-Console.WriteLine($"{workflowInstanceId} workflow started");
-
-await WaitForWorkflowInstanceToEnd(host, workflowInstanceId);
-
-workflowInstanceId = await host.StartWorkflow(nameof(IfWorkflow), new IfState { EnterIf = true});
-Console.WriteLine($"{workflowInstanceId} workflow started");
-
-await WaitForWorkflowInstanceToEnd(host, workflowInstanceId);
-
-workflowInstanceId = await host.StartWorkflow(nameof(IfWorkflow), new IfState { EnterIf = false});
-Console.WriteLine($"{workflowInstanceId} workflow started");
-
-await WaitForWorkflowInstanceToEnd(host, workflowInstanceId);
-
-workflowInstanceId = await host.StartWorkflow(nameof(WhileWorkflow), new CounterState { CurrentCount = 1});
-Console.WriteLine($"{workflowInstanceId} workflow started");
-
-await WaitForWorkflowInstanceToEnd(host, workflowInstanceId);
-
-workflowInstanceId = await host.StartWorkflow(nameof(ForEachParallelWorkflow), new ForEachState());
-Console.WriteLine($"{workflowInstanceId} workflow started");
-
-await WaitForWorkflowInstanceToEnd(host, workflowInstanceId);
-
-workflowInstanceId = await host.StartWorkflow(nameof(ParallelWorkflow));
-Console.WriteLine($"{workflowInstanceId} workflow started");
-
-await WaitForWorkflowInstanceToEnd(host, workflowInstanceId);
-
-workflowInstanceId = await host.StartWorkflow(nameof(ScheduleWorkflow));
-Console.WriteLine($"{workflowInstanceId} workflow started");
-
-await WaitForWorkflowInstanceToEnd(host, workflowInstanceId);
-
-workflowInstanceId = await host.StartWorkflow(nameof(RecurWorkflow), new CounterState { CurrentCount = 1});
-Console.WriteLine($"{workflowInstanceId} workflow started");
-
-await WaitForWorkflowInstanceToEnd(host, workflowInstanceId);
+//
+// var workflowInstanceId = await host.StartWorkflow(nameof(SagaWorkflow));
+// Console.WriteLine($"{workflowInstanceId} workflow started");
+//
+// await WaitForWorkflowInstanceToEnd(host, workflowInstanceId);
+//
+// var workflowInstanceId = await host.StartWorkflow(nameof(ExternalEventWorkflow));
+// Console.WriteLine($"{workflowInstanceId} workflow started");
+//
+// await Task.Run(() =>
+// {
+//     Console.WriteLine(".... waiting for reboot");
+//     Thread.Sleep(4000);
+//     Console.WriteLine(".... reboot finished");
+//     host.PublishEvent("Rebooted", string.Empty, null);
+// });
+//
+// await WaitForWorkflowInstanceToEnd(host, workflowInstanceId);
+//
+// var workflowInstanceId = await host.StartWorkflow(nameof(ExternalActivityWorkflow));
+// Console.WriteLine($"{workflowInstanceId} workflow started");
+//
+// var activity = await host.GetPendingActivity("IncreaseCounter", string.Empty, TimeSpan.FromSeconds(10));
+// if (activity != null)
+// {
+//     Console.WriteLine("... activity is handled externally");
+//     Thread.Sleep(2000);
+//     Console.WriteLine("... activity handled successfully");
+//     await host.SubmitActivitySuccess(activity.Token, (int) activity.Parameters + 1);
+// }
+//
+// await WaitForWorkflowInstanceToEnd(host, workflowInstanceId);
 
 
 async Task WaitForWorkflowInstanceToEnd(IWorkflowHost host, string workflowInstanceId)
